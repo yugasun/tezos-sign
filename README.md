@@ -62,6 +62,16 @@ const siged = TezosSign.sign(opbytes, privateKey);
 
 // generate keys
 const keys = TezosSign.generateKeys('yugasun');
+
+/*
+keys {
+    mnemonic: 'memory key words',
+    passphrase: 'yugasun',
+    sk: 'private key',
+    pk: 'public key',
+    pkh: 'address',
+}
+*/
 ```
 
 ## 开发
