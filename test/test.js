@@ -1,13 +1,20 @@
 var expect = require('expect.js');
 
-var base = require('../dist/index.js');
+var TezosSign = require('../dist/index.js');
 
 describe('Unit test', function() {
     this.timeout(1000);
 
-    describe('module name test', function() {
-        it('Name should be TezosSign', function() {
-            expect(base.name).to.equal('TezosSign');
+    describe('Sign', function() {
+        it('Should has sign function', function() {
+            expect(typeof TezosSign.sign).to.equal('function');
+        });
+    });
+
+    describe('Generate keys', function() {
+        it('result validate', function() {
+            const keys = TezosSign.generateKeys('yugasun');
+            expect(keys.passphrase).to.equal('yugasun');
         });
     });
 });
