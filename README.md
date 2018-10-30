@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/yugasun/tezos-sign.svg?branch=master)](https://travis-ci.org/yugasun/tezos-sign)
 [![NPM downloads](http://img.shields.io/npm/dm/tezos-sign.svg?style=flat-square)](http://www.npmtrends.com/tezos-sign)
 
-Offline sign tool for [tezos](https://tezos.com/)
+[tezos](https://tezos.com/) 区块链的离线签名工具（从 [eztz](https://github.com/TezTech/eztz) 分离出来的）。
 
 ## 目录介绍
 
