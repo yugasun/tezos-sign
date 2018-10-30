@@ -54,11 +54,15 @@ requirejs(['node_modules/tezos-sign/dist/index.aio.js'], function (base) {
 
 ## 示例
 
+```js
+import TezosSign from 'tezos-sign';
+// opbytes is operation bytes
+// privateKey is your account private key
+const siged = TezosSign(opbytes, privateKey);
 ```
 
-```
+## 开发
 
-## 贡献者指南
 首次运行需要先安装依赖
 
 ```bash
@@ -76,6 +80,8 @@ $ npm run build
 ```bash
 $ npm test
 ```
+
+> 注意：单元测试需要重命名 `test.example.js` 为 `test.js`，并提供 `operation bytes` 和 `private key`
 
 修改package.json中的版本号，修改README.md中的版本号，修改CHANGELOG.md，然后发布新版
 
