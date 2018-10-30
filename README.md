@@ -58,7 +58,10 @@ requirejs(['node_modules/tezos-sign/dist/index.aio.js'], function (base) {
 import TezosSign from 'tezos-sign';
 // opbytes is operation bytes
 // privateKey is your account private key
-const siged = TezosSign(opbytes, privateKey);
+const siged = TezosSign.sign(opbytes, privateKey);
+
+// generate keys
+const keys = TezosSign.generateKeys('yugasun');
 ```
 
 ## 开发
