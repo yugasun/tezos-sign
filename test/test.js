@@ -17,4 +17,14 @@ describe('Unit test', function() {
             expect(keys.passphrase).to.equal('yugasun');
         });
     });
+
+    describe('Extract private key', function() {
+        it('Need return address', function() {
+            const keys = TezosSign.generateKeys('yugasun');
+
+            const extractKeys = TezosSign.extractKeys(keys.sk);
+
+            expect(keys.pkh).to.equal(extractKeys.pkh);
+        });
+    });
 });

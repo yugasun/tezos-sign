@@ -62,7 +62,6 @@ const siged = TezosSign.sign(opbytes, privateKey);
 
 // generate keys
 const keys = TezosSign.generateKeys('yugasun');
-
 /*
 keys {
     mnemonic: 'memory key words',
@@ -72,6 +71,17 @@ keys {
     pkh: 'address',
 }
 */
+
+// extract keys
+const extractKeys = TezosSign.extractKeys(keys.sk);
+/*
+extractKeys {
+    sk: 'private key',
+    pk: 'public key',
+    pkh: 'address',
+}
+*/
+
 ```
 
 ## 开发

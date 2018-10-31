@@ -5,6 +5,7 @@ import bip39 from 'bip39';
 const Prefix = {
     tz1: new Uint8Array([6, 161, 159]),
     edsk: new Uint8Array([43, 246, 78, 7]),
+    edsk2: new Uint8Array([13, 15, 58, 7]),
     edpk: new Uint8Array([13, 15, 37, 217]),
     edsig: new Uint8Array([9, 245, 205, 134, 18]),
 };
@@ -45,6 +46,12 @@ const Utility = {
 };
 
 const TezosSign = {
+    /**
+     * generate keys
+     * 
+     * @param {string} name passphrase
+     * @return {object}
+     */
     generateKeys(name) {
         const m = Utility.generateMnemonic();
         const s = bip39.mnemonicToSeed(m, name).slice(0, 32);
@@ -62,6 +69,49 @@ const TezosSign = {
             pk,
             pkh,
         };
+    },
+
+    /**
+     * extract keys
+     * 
+     * @param {string} sk private key
+     * @return {object}
+     */
+    extractKeys(sk) {
+        const pref = sk.substr(0, 4);
+        switch (pref) {
+        case 'edsk':
+            if (sk.length === 98) {
+                const decodeEdsk = Utility.b58cdecode(sk, Prefix.edsk).slice(32);
+
+                const pk = Utility.b58cencode(decodeEdsk, Prefix.edpk);
+                const hash = sodium.crypto_generichash(20, decodeEdsk);
+
+                const pkh = Utility.b58cencode(hash, Prefix.tz1);
+                return {
+                    pk,
+                    pkh,
+                    sk,
+                };
+            } else if (sk.length == 54) {
+                //seed
+                const s = Utility.b58cdecode(sk, Prefix.edsk2);
+                const kp = sodium.crypto_sign_seed_keypair(s);
+                const hash = sodium.crypto_generichash(20, kp.publicKey);
+
+                const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
+                const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
+                const pkh = Utility.b58cencode(hash, Prefix.tz1);
+                return {
+                    sk,
+                    pk,
+                    pkh,
+                };
+            }
+            break;
+        default:
+            return false;
+        }
     },
 
     /**
