@@ -15,17 +15,17 @@ const Utility = {
         const n = new Uint8Array(prefix.length + payload.length);
         n.set(prefix);
         n.set(payload, prefix.length);
-        return bs58check.encode(new Buffer(n, 'hex'));
+        return bs58check.encode(Buffer.from(n, 'hex'));
     },
     b58cdecode(enc, prefix) {
         return bs58check.decode(enc).slice(prefix.length);
     },
-    buf2hex: function(buffer) {
-        const byteArray = new Uint8Array(buffer),
-            hexParts = [];
-        for (let i = 0; i < byteArray.length; i++) {
-            let hex = byteArray[i].toString(16);
-            let paddedHex = ('00' + hex).slice(-2);
+    buf2hex(buffer) {
+        const byteArray = new Uint8Array(buffer);
+        const hexParts = [];
+        for (let i = 0; i < byteArray.length; i += 1) {
+            const hex = byteArray[i].toString(16);
+            const paddedHex = `00${hex}`.slice(-2);
             hexParts.push(paddedHex);
         }
         return hexParts.join('');
@@ -36,7 +36,7 @@ const Utility = {
         return b;
     },
     mergebuf(b1, b2) {
-        var r = new Uint8Array(b1.length + b2.length);
+        const r = new Uint8Array(b1.length + b2.length);
         r.set(b1);
         r.set(b2, b1.length);
         return r;
@@ -48,7 +48,7 @@ const Utility = {
 const TezosSign = {
     /**
      * generate keys
-     * 
+     *
      * @param {string} name passphrase
      * @return {object}
      */
@@ -72,45 +72,68 @@ const TezosSign = {
     },
 
     /**
+     * generate keys without seed
+     *
+     * @return {object}
+     */
+    generateKeysNoSeed() {
+        const kp = sodium.crypto_sign_keypair();
+
+        const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
+        const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
+        const hash = sodium.crypto_generichash(20, kp.publicKey);
+        const pkh = Utility.b58cencode(hash, Prefix.tz1);
+        return {
+            sk,
+            pk,
+            pkh,
+        };
+    },
+
+    /**
      * extract keys
-     * 
+     *
      * @param {string} sk private key
      * @return {object}
      */
     extractKeys(sk) {
         const pref = sk.substr(0, 4);
         switch (pref) {
-        case 'edsk':
-            if (sk.length === 98) {
-                const decodeEdsk = Utility.b58cdecode(sk, Prefix.edsk).slice(32);
+            case 'edsk':
+                if (sk.length === 98) {
+                    const decodeEdsk = Utility.b58cdecode(
+                        sk,
+                        Prefix.edsk,
+                    ).slice(32);
 
-                const pk = Utility.b58cencode(decodeEdsk, Prefix.edpk);
-                const hash = sodium.crypto_generichash(20, decodeEdsk);
+                    const pk = Utility.b58cencode(decodeEdsk, Prefix.edpk);
+                    const hash = sodium.crypto_generichash(20, decodeEdsk);
 
-                const pkh = Utility.b58cencode(hash, Prefix.tz1);
-                return {
-                    pk,
-                    pkh,
-                    sk,
-                };
-            } else if (sk.length == 54) {
-                //seed
-                const s = Utility.b58cdecode(sk, Prefix.edsk2);
-                const kp = sodium.crypto_sign_seed_keypair(s);
-                const hash = sodium.crypto_generichash(20, kp.publicKey);
+                    const pkh = Utility.b58cencode(hash, Prefix.tz1);
+                    return {
+                        pk,
+                        pkh,
+                        sk,
+                    };
+                }
+                if (sk.length === 54) {
+                    // seed
+                    const s = Utility.b58cdecode(sk, Prefix.edsk2);
+                    const kp = sodium.crypto_sign_seed_keypair(s);
+                    const hash = sodium.crypto_generichash(20, kp.publicKey);
 
-                const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
-                const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
-                const pkh = Utility.b58cencode(hash, Prefix.tz1);
-                return {
-                    sk,
-                    pk,
-                    pkh,
-                };
-            }
-            break;
-        default:
-            return false;
+                    const sk1 = Utility.b58cencode(kp.privateKey, Prefix.edsk);
+                    const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
+                    const pkh = Utility.b58cencode(hash, Prefix.tz1);
+                    return {
+                        sk: sk1,
+                        pk,
+                        pkh,
+                    };
+                }
+                break;
+            default:
+                return false;
         }
     },
 
@@ -119,11 +142,12 @@ const TezosSign = {
      *
      * @param {string} bytes operation bytes
      * @param {string} sk private key
+     * @return {object}
      */
     sign(bytes, sk) {
-        var bb = Utility.hex2buf(bytes);
-        var wm = new Uint8Array([3]);
-        if (typeof wm != 'undefined') bb = Utility.mergebuf(wm, bb);
+        let bb = Utility.hex2buf(bytes);
+        const wm = new Uint8Array([3]);
+        if (typeof wm !== 'undefined') bb = Utility.mergebuf(wm, bb);
         const chash = sodium.crypto_generichash(32, bb);
         const edsk = Utility.b58cdecode(sk, Prefix.edsk);
         const sig = sodium.crypto_sign_detached(chash, edsk, 'uint8array');
@@ -131,11 +155,26 @@ const TezosSign = {
         const sbytes = bytes + Utility.buf2hex(sig);
 
         return {
-            bytes: bytes,
-            sig: sig,
-            edsig: edsig,
-            sbytes: sbytes,
+            bytes,
+            sig,
+            edsig,
+            sbytes,
         };
+    },
+
+    /**
+     * validate address
+     *
+     * @param {string} a address
+     * @return {bool}
+     */
+    checkAddress(a) {
+        try {
+            Utility.b58cdecode(a, Prefix.tz1);
+            return true;
+        } catch (e) {
+            return false;
+        }
     },
 };
 

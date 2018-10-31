@@ -1,6 +1,5 @@
-var expect = require('expect.js');
-
-var TezosSign = require('../dist/index.js');
+const expect = require('expect.js');
+const TezosSign = require('../dist/index.js');
 
 describe('Unit test', function() {
     this.timeout(1000);
@@ -15,6 +14,14 @@ describe('Unit test', function() {
         it('result validate', function() {
             const keys = TezosSign.generateKeys('yugasun');
             expect(keys.passphrase).to.equal('yugasun');
+        });
+    });
+
+    describe('Generate keys without seed', function() {
+        it('result validate', function() {
+            const keys = TezosSign.generateKeys('yugasun');
+            const validateAddr = TezosSign.checkAddress(keys.pkh);
+            expect(validateAddr).to.equal(true);
         });
     });
 

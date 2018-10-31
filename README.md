@@ -72,6 +72,16 @@ keys {
 }
 */
 
+// generate keys without seed
+const keysNoSeed = TezosSign.generateKeysNoSeed();
+/*
+keysNoSeed {
+    sk: 'private key',
+    pk: 'public key',
+    pkh: 'address',
+}
+*/
+
 // extract keys
 const extractKeys = TezosSign.extractKeys(keys.sk);
 /*
