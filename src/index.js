@@ -8,6 +8,7 @@ const Prefix = {
     edsk2: new Uint8Array([13, 15, 58, 7]),
     edpk: new Uint8Array([13, 15, 37, 217]),
     edsig: new Uint8Array([9, 245, 205, 134, 18]),
+    o: new Uint8Array([5, 116]),
 };
 
 const Utility = {
@@ -53,22 +54,26 @@ const TezosSign = {
      * @return {object}
      */
     generateKeys(name) {
-        const m = Utility.generateMnemonic();
-        const s = bip39.mnemonicToSeed(m, name).slice(0, 32);
-        const kp = sodium.crypto_sign_seed_keypair(s);
+        try {
+            const m = Utility.generateMnemonic();
+            const s = bip39.mnemonicToSeed(m, name).slice(0, 32);
+            const kp = sodium.crypto_sign_seed_keypair(s);
 
-        const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
-        const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
-        const hash = sodium.crypto_generichash(20, kp.publicKey);
-        const pkh = Utility.b58cencode(hash, Prefix.tz1);
+            const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
+            const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
+            const hash = sodium.crypto_generichash(20, kp.publicKey);
+            const pkh = Utility.b58cencode(hash, Prefix.tz1);
 
-        return {
-            mnemonic: m,
-            passphrase: name,
-            sk,
-            pk,
-            pkh,
-        };
+            return {
+                mnemonic: m,
+                passphrase: name,
+                sk,
+                pk,
+                pkh,
+            };
+        } catch (e) {
+            throw new Error(`Generate failed: ${e.message}`);
+        }
     },
 
     /**
@@ -77,17 +82,21 @@ const TezosSign = {
      * @return {object}
      */
     generateKeysNoSeed() {
-        const kp = sodium.crypto_sign_keypair();
+        try {
+            const kp = sodium.crypto_sign_keypair();
 
-        const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
-        const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
-        const hash = sodium.crypto_generichash(20, kp.publicKey);
-        const pkh = Utility.b58cencode(hash, Prefix.tz1);
-        return {
-            sk,
-            pk,
-            pkh,
-        };
+            const sk = Utility.b58cencode(kp.privateKey, Prefix.edsk);
+            const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
+            const hash = sodium.crypto_generichash(20, kp.publicKey);
+            const pkh = Utility.b58cencode(hash, Prefix.tz1);
+            return {
+                sk,
+                pk,
+                pkh,
+            };
+        } catch (e) {
+            throw new Error(`Generate failed: ${e.message}`);
+        }
     },
 
     /**
@@ -97,43 +106,47 @@ const TezosSign = {
      * @return {object}
      */
     extractKeys(sk) {
-        const pref = sk.substr(0, 4);
-        switch (pref) {
-            case 'edsk':
-                if (sk.length === 98) {
-                    const decodeEdsk = Utility.b58cdecode(
-                        sk,
-                        Prefix.edsk,
-                    ).slice(32);
+        try {
+            const pref = sk.substr(0, 4);
+            switch (pref) {
+                case 'edsk':
+                    if (sk.length === 98) {
+                        const decodeEdsk = Utility.b58cdecode(
+                            sk,
+                            Prefix.edsk,
+                        ).slice(32);
 
-                    const pk = Utility.b58cencode(decodeEdsk, Prefix.edpk);
-                    const hash = sodium.crypto_generichash(20, decodeEdsk);
+                        const pk = Utility.b58cencode(decodeEdsk, Prefix.edpk);
+                        const hash = sodium.crypto_generichash(20, decodeEdsk);
 
-                    const pkh = Utility.b58cencode(hash, Prefix.tz1);
-                    return {
-                        pk,
-                        pkh,
-                        sk,
-                    };
-                }
-                if (sk.length === 54) {
-                    // seed
-                    const s = Utility.b58cdecode(sk, Prefix.edsk2);
-                    const kp = sodium.crypto_sign_seed_keypair(s);
-                    const hash = sodium.crypto_generichash(20, kp.publicKey);
+                        const pkh = Utility.b58cencode(hash, Prefix.tz1);
+                        return {
+                            pk,
+                            pkh,
+                            sk,
+                        };
+                    }
+                    if (sk.length === 54) {
+                        // seed
+                        const s = Utility.b58cdecode(sk, Prefix.edsk2);
+                        const kp = sodium.crypto_sign_seed_keypair(s);
+                        const hash = sodium.crypto_generichash(20, kp.publicKey);
 
-                    const sk1 = Utility.b58cencode(kp.privateKey, Prefix.edsk);
-                    const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
-                    const pkh = Utility.b58cencode(hash, Prefix.tz1);
-                    return {
-                        sk: sk1,
-                        pk,
-                        pkh,
-                    };
-                }
-                break;
-            default:
-                return false;
+                        const sk1 = Utility.b58cencode(kp.privateKey, Prefix.edsk);
+                        const pk = Utility.b58cencode(kp.publicKey, Prefix.edpk);
+                        const pkh = Utility.b58cencode(hash, Prefix.tz1);
+                        return {
+                            sk: sk1,
+                            pk,
+                            pkh,
+                        };
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        } catch (e) {
+            throw new Error(`Extract private key failed: ${e.message}`);
         }
     },
 
@@ -145,21 +158,25 @@ const TezosSign = {
      * @return {object}
      */
     sign(bytes, sk) {
-        let bb = Utility.hex2buf(bytes);
-        const wm = new Uint8Array([3]);
-        if (typeof wm !== 'undefined') bb = Utility.mergebuf(wm, bb);
-        const chash = sodium.crypto_generichash(32, bb);
-        const edsk = Utility.b58cdecode(sk, Prefix.edsk);
-        const sig = sodium.crypto_sign_detached(chash, edsk, 'uint8array');
-        const edsig = Utility.b58cencode(sig, Prefix.edsig);
-        const sbytes = bytes + Utility.buf2hex(sig);
+        try {
+            let bb = Utility.hex2buf(bytes);
+            const wm = new Uint8Array([3]);
+            if (typeof wm !== 'undefined') bb = Utility.mergebuf(wm, bb);
+            const chash = sodium.crypto_generichash(32, bb);
+            const edsk = Utility.b58cdecode(sk, Prefix.edsk);
+            const sig = sodium.crypto_sign_detached(chash, edsk, 'uint8array');
+            const edsig = Utility.b58cencode(sig, Prefix.edsig);
+            const sbytes = bytes + Utility.buf2hex(sig);
 
-        return {
-            bytes,
-            sig,
-            edsig,
-            sbytes,
-        };
+            return {
+                bytes,
+                sig,
+                edsig,
+                sbytes,
+            };
+        } catch (e) {
+            throw new Error(`Sign failed: ${e.message}`);
+        }
     },
 
     /**
@@ -174,6 +191,23 @@ const TezosSign = {
             return true;
         } catch (e) {
             return false;
+        }
+    },
+
+    /**
+     * generate tx hash
+     *
+     * @param {string} sbytes signed op bytes
+     * @return {string}
+     */
+    generateTxHash(sbytes) {
+        try {
+            const hexBuffer = Utility.hex2buf(sbytes);
+            const soHash = sodium.crypto_generichash(32, hexBuffer);
+            const hash = Utility.b58cencode(soHash, Prefix.o);
+            return hash;
+        } catch (e) {
+            throw new Error(`Generate transaction hash failed: ${e.message}`);
         }
     },
 };
