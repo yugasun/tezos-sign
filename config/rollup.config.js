@@ -1,7 +1,7 @@
 // rollup.config.js
 
-var babel = require('rollup-plugin-babel');
-var common = require('./rollup.js');
+const babel = require('rollup-plugin-babel');
+const common = require('./rollup.js');
 
 export default {
     input: 'src/index.js',
@@ -15,7 +15,7 @@ export default {
     plugins: [
         babel({
             runtimeHelpers: true,
-            exclude: 'node_modules/**'
-        })
-    ]
+            exclude: 'node_modules/**',
+        }),
+    ],
 };

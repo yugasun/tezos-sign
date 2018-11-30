@@ -4,58 +4,58 @@
 [![Build Status](https://travis-ci.org/yugasun/tezos-sign.svg?branch=master)](https://travis-ci.org/yugasun/tezos-sign)
 [![NPM downloads](http://img.shields.io/npm/dm/tezos-sign.svg?style=flat-square)](http://www.npmtrends.com/tezos-sign)
 
-English | [简体中文](./README.zh-CN.md)
+[English](./README.md) | 简体中文
 
-Offline sign tool for [tezos](https://tezos.com/) divided from [eztz](https://github.com/TezTech/eztz)
+[tezos](https://tezos.com/) 区块链的离线签名工具（从 [eztz](https://github.com/TezTech/eztz) 分离出来的）。
 
-## Directory
+## 目录介绍
 
 ```
 .
-├── demo use demo
-├── dist build output dir
-├── doc docs
-├── src source code
-├── test unit test
-├── CHANGELOG.md change log
-└── TODO.md todo
+├── demo 使用demo
+├── dist 编译产出代码
+├── doc 项目文档
+├── src 源代码目录
+├── test 单元测试
+├── CHANGELOG.md 变更日志
+└── TODO.md 计划功能
 ```
 
-## Usage Guide
+## 使用者指南
 
-Install by npm:
+通过npm下载安装代码
 
 ```bash
 $ npm install --save tezos-sign
 ```
 
-For node:
+如果你是node环境
 
 ```js
 var TezosSign = require('tezos-sign');
 ```
 
-For webpack:
+如果你是webpack等环境
 
 ```js
 import TezosSign from 'tezos-sign';
 ```
 
-## Demo
+## 示例
 
 ```js
 import TezosSign from 'tezos-sign';
 
-// sign transaction
-// opbytes is operation bytes
-// privateKey is your account private key
+// 签名交易
+// opbytes 是交易生成字节数据
+// privateKey 私钥
 const siged = TezosSign.sign(opbytes, privateKey);
 
-// generate transaction hash
-// sopbytes = signed.sbytes
+// 生成交易hash
+// sopbytes 是签名结果中的 sbytes
 const hash = TezosSign.generateTxHash(sopbytes);
 
-// generate keys
+// 生成公私钥对
 const keys = TezosSign.generateKeys('yugasun');
 /*
 keys {
@@ -67,7 +67,7 @@ keys {
 }
 */
 
-// generate keys without seed
+// 生成不带助记词的公私钥对
 const keysNoSeed = TezosSign.generateKeysNoSeed();
 /*
 keysNoSeed {
@@ -77,7 +77,7 @@ keysNoSeed {
 }
 */
 
-// extract keys
+// 解析私钥
 const extractKeys = TezosSign.extractKeys(keys.sk);
 /*
 extractKeys {
@@ -89,33 +89,33 @@ extractKeys {
 
 ```
 
-## Develop
+## 开发
 
-Install dependencies:
+首次运行需要先安装依赖
 
 ```bash
 $ npm install
 ```
 
-Build:
+一键打包生成生产代码
 
 ```bash
 $ npm run build
 ```
 
-Unit test:
+运行单元测试
 
 ```bash
 $ npm test
 ```
 
-Modify version in `package.json`, `README.md`, and release it
+修改package.json中的版本号，修改README.md中的版本号，修改CHANGELOG.md，然后发布新版
 
 ```bash
 $ npm run release
 ```
 
-Npm publish:
+将新版本发布到npm
 
 ```bash
 $ npm publish
