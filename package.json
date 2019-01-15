@@ -1,6 +1,6 @@
 {
   "name": "tezos-sign",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Offline tool for tezos",
   "main": "dist/index.js",
   "jsnext:main": "dist/index.esm.js",
